@@ -14,8 +14,8 @@ JSON_PATH = os.path.join('assets', 'pokemon.json')
 
 
 def main():
-    poke_dic = fetch_pokemon_data_from_wikipedia()
-    download_pokemon_images_and_create_json(poke_dic, image_dir=IMAGE_DIR, json_path=JSON_PATH)
+    # poke_dic = fetch_pokemon_data_from_wikipedia()
+    # download_pokemon_images_and_create_json(poke_dic, image_dir=IMAGE_DIR, json_path=JSON_PATH)
     upload_pokemon_json_to_database(json_path=JSON_PATH)
 
 
