@@ -4,14 +4,17 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 // PostgreSQL Connection
 Future<Connection> connectToDatabase() async {
   await dotenv.load();
-  String sqlName = dotenv.env['SQL_NAME']!;
-  String sqlPassword = dotenv.env['SQL_PASSWORD']!;
-  String sqlHost = dotenv.env['SQL_HOST']!;
+  String sqlDBName = dotenv.env['POSTGRESQL_DBNAME']!;
+  String sqlHost = dotenv.env['POSTGRESQL_HOST']!;
+  int sqlPort = int.parse(dotenv.env['POSTGRESQL_PORT']!);
+  String sqlUser = dotenv.env['POSTGRESQL_USER']!;
+  String sqlPassword = dotenv.env['POSTGRESQL_PASSWORD']!;
 
   final conn = await Connection.open(Endpoint(
+    database: sqlDBName,
     host: sqlHost,
-    database: sqlName,
-    username: sqlName,
+    port: sqlPort,
+    username: sqlUser,
     password: sqlPassword,
   ));
   return conn;

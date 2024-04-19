@@ -1,5 +1,5 @@
 """
-Uploads json data to Elephant SQL database
+Uploads json data to PostgreSQL database
 """
 
 import psycopg2
@@ -8,12 +8,13 @@ import json
 import os
 
 
-TABLE_NAME = 'Pokemon'  # table name in database
+TABLE_NAME = 'pokemon'  # table name in database
 
 
 def upload_pokemon_json_to_database(json_path):
-    conn = establish_connection()  # connect to Elephant SQL database
-    update_json_from_db(conn, json_path)
+    conn = establish_connection()  # connect to PostgreSQL database
+    if check_if_table_exists(conn, TABLE_NAME):
+        update_json_from_db(conn, json_path)
     delete_table(conn)
     create_new_table(conn)
     load_pokemon_into_table(conn, json_path=json_path)
@@ -22,14 +23,23 @@ def upload_pokemon_json_to_database(json_path):
 
 def establish_connection():
     conn = psycopg2.connect(
-        user=os.environ.get('SQL_NAME'),
-        password=os.environ.get('SQL_PASSWORD'),
-        host=os.environ.get('SQL_HOST'),
-        port='5432',
-        database=os.environ.get('SQL_NAME'),
+        dbname=os.environ.get('POSTGRESQL_DBNAME'),
+        host=os.environ.get('POSTGRESQL_HOST'),
+        port=os.environ.get('POSTGRESQL_PORT'),
+        user=os.environ.get('POSTGRESQL_USER'),
+        password=os.environ.get('POSTGRESQL_PASSWORD')
     )
-    print('Connection to database')
+    cursor = conn.cursor()
+    cursor.execute('SELECT version();')
+    record = cursor.fetchone()
+    print('Connected to - ', record)
     return conn
+
+
+def check_if_table_exists(conn, name):
+    cur = conn.cursor()
+    cur.execute(f"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = '{name}')")
+    return cur.fetchone()[0]
 
 
 def open_json(json_path):
