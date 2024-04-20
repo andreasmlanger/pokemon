@@ -13,6 +13,7 @@ TABLE_NAME = 'pokemon'  # table name in database
 
 def upload_pokemon_json_to_database(json_path):
     conn = establish_connection()  # connect to PostgreSQL database
+    verify_successful_connection(conn)
     if check_if_table_exists(conn, TABLE_NAME):
         update_json_from_db(conn, json_path)
     delete_table(conn)
@@ -29,17 +30,48 @@ def establish_connection():
         user=os.environ.get('POSTGRESQL_USER'),
         password=os.environ.get('POSTGRESQL_PASSWORD')
     )
+    return conn
+
+
+def verify_successful_connection(conn):
     cursor = conn.cursor()
     cursor.execute('SELECT version();')
     record = cursor.fetchone()
     print('Connected to - ', record)
-    return conn
 
 
 def check_if_table_exists(conn, name):
     cur = conn.cursor()
     cur.execute(f"SELECT EXISTS(SELECT 1 FROM information_schema.tables WHERE table_name = '{name}')")
     return cur.fetchone()[0]
+
+
+def drop_all_tables():
+    """
+    Will reset the complete PostgreSQL database!
+    """
+    conn = establish_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")
+    tables = cur.fetchall()
+    for table in tables:
+        cur.execute(f"DROP TABLE IF EXISTS {table[0]} CASCADE")
+    conn.commit()
+    cur.close()
+    conn.close()
+    print('All tables deleted!')
+    vacuum()  # vacuum after deleting!
+
+
+def vacuum():
+    conn = establish_connection()
+    conn.autocommit = True
+    cur = conn.cursor()
+    cur.execute('VACUUM FULL')
+    conn.commit()
+    cur.close()
+    conn.close()
+    print('PostgreSQL database vacuumed!')
 
 
 def open_json(json_path):
